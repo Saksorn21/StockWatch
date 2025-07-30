@@ -22,6 +22,7 @@ interface PortfolioContextType {
   addSubPortfolio: (portfolio: Omit<SubPortfolio, "id" | "createdAt">) => SubPortfolio;
   deleteSubPortfolio: (id: string) => void;
   setCurrentPortfolio: (id: string | null) => void;
+  getAllPortfolioStocks: () => Stock[];
 }
 
 const PortfolioContext = createContext<PortfolioContextType | undefined>(undefined);
@@ -59,9 +60,14 @@ export function PortfolioProvider({ children }: { children: React.ReactNode }) {
           })
         );
         setStocks(updatedStocks);
-        PortfolioStorage.savePortfolio(PortfolioStorage.getPortfolio().map(s => 
-          updatedStocks.find(us => us.id === s.id) || s
-        ));
+        
+        // Update the stored portfolio with new prices
+        const allStocks = PortfolioStorage.getPortfolio();
+        const updatedAllStocks = allStocks.map(s => {
+          const updated = updatedStocks.find(us => us.id === s.id);
+          return updated || s;
+        });
+        PortfolioStorage.savePortfolio(updatedAllStocks);
       } else {
         setStocks([]);
       }
@@ -158,6 +164,10 @@ export function PortfolioProvider({ children }: { children: React.ReactNode }) {
     setCurrentPortfolioId(id);
   };
 
+  const getAllPortfolioStocks = () => {
+    return PortfolioStorage.getPortfolio();
+  };
+
   const portfolioMetrics = PortfolioStorage.calculatePortfolioMetrics(stocks);
 
   return (
@@ -175,6 +185,7 @@ export function PortfolioProvider({ children }: { children: React.ReactNode }) {
         addSubPortfolio,
         deleteSubPortfolio,
         setCurrentPortfolio,
+        getAllPortfolioStocks,
       }}
     >
       {children}

@@ -22,7 +22,8 @@ export default function Portfolio() {
     deleteStock,
     addSubPortfolio,
     deleteSubPortfolio,
-    setCurrentPortfolio 
+    setCurrentPortfolio,
+    getAllPortfolioStocks
   } = usePortfolio();
   const { toast } = useToast();
 
@@ -107,7 +108,7 @@ export default function Portfolio() {
       {subPortfolios.length > 0 && (
         <PortfolioAllocationChart 
           subPortfolios={subPortfolios} 
-          totalValue={0} // We'll calculate this properly when we have all stocks loaded
+          getAllPortfolioStocks={getAllPortfolioStocks}
         />
       )}
 
