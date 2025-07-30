@@ -32,26 +32,29 @@ export function StockChart({ symbol }: StockChartProps) {
       let from = now;
       let resolution = "D";
 
+      let range = "1d";
+      let interval = "1m";
+
       switch (timeframe) {
         case "1D":
-          from = now - (24 * 60 * 60);
-          resolution = "5";
+          range = "1d";
+          interval = "1m";
           break;
         case "1W":
-          from = now - (7 * 24 * 60 * 60);
-          resolution = "30";
+          range = "5d";
+          interval = "15m";
           break;
         case "1M":
-          from = now - (30 * 24 * 60 * 60);
-          resolution = "D";
+          range = "1mo";
+          interval = "1d";
           break;
         case "1Y":
-          from = now - (365 * 24 * 60 * 60);
-          resolution = "W";
+          range = "1y";
+          interval = "1wk";
           break;
       }
 
-      return StockAPI.getStockCandles(symbol, resolution, from, now);
+      return StockAPI.getStockCandles(symbol, range, interval);
     },
     enabled: !!symbol,
   });

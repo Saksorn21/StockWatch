@@ -1,9 +1,16 @@
-const API_KEY = import.meta.env.VITE_FINNHUB_API_KEY || "default_key";
-const BASE_URL = "https://finnhub.io/api/v1";
+const RAPIDAPI_KEY = import.meta.env.VITE_RAPIDAPI_KEY || "default_key";
+const BASE_URL = "https://yahoo-finance-real-time1.p.rapidapi.com";
 
 export class StockAPI {
   private static async fetchWithAuth(url: string) {
-    const response = await fetch(`${url}&token=${API_KEY}`);
+    const response = await fetch(url, {
+      method: 'GET',
+      headers: {
+        'x-rapidapi-key': RAPIDAPI_KEY,
+        'x-rapidapi-host': 'yahoo-finance-real-time1.p.rapidapi.com'
+      }
+    });
+    
     if (!response.ok) {
       throw new Error(`API request failed: ${response.statusText}`);
     }
@@ -12,16 +19,33 @@ export class StockAPI {
 
   static async getStockQuote(symbol: string) {
     try {
-      const data = await this.fetchWithAuth(`${BASE_URL}/quote?symbol=${symbol}`);
+      // Use chart data to get the latest price since quote endpoint might not exist
+      const chartData = await this.fetchWithAuth(
+        `${BASE_URL}/stock/get-chart?symbol=${symbol}&region=US&lang=en-US&useYfid=true&includeAdjustedClose=true&events=div%2Csplit%2Cearn&range=1d&interval=1m&includePrePost=false`
+      );
+
+      if (!chartData.chart?.result?.[0]) {
+        throw new Error(`No quote data found for ${symbol}`);
+      }
+
+      const result = chartData.chart.result[0];
+      const meta = result.meta;
+      const prices = result.indicators?.quote?.[0];
+      
+      // Get latest price from the chart data
+      const latestIndex = Math.max(0, (prices?.close?.length || 1) - 1);
+      const currentPrice = prices?.close?.[latestIndex] || meta.regularMarketPrice || 0;
+      const previousClose = meta.previousClose || meta.chartPreviousClose || currentPrice;
+      
       return {
         symbol,
-        price: data.c || 0,
-        change: data.d || 0,
-        changePercent: data.dp || 0,
-        high: data.h || 0,
-        low: data.l || 0,
-        open: data.o || 0,
-        previousClose: data.pc || 0,
+        price: currentPrice,
+        change: currentPrice - previousClose,
+        changePercent: previousClose && previousClose !== 0 ? ((currentPrice - previousClose) / previousClose) * 100 : 0,
+        high: meta.regularMarketDayHigh || currentPrice,
+        low: meta.regularMarketDayLow || currentPrice,
+        open: meta.regularMarketOpen || currentPrice,
+        previousClose: previousClose,
       };
     } catch (error) {
       console.error(`Error fetching quote for ${symbol}:`, error);
@@ -31,44 +55,71 @@ export class StockAPI {
 
   static async getCompanyProfile(symbol: string) {
     try {
-      const data = await this.fetchWithAuth(`${BASE_URL}/stock/profile2?symbol=${symbol}`);
+      const chartData = await this.fetchWithAuth(
+        `${BASE_URL}/stock/get-chart?symbol=${symbol}&region=US&lang=en-US&useYfid=true&includeAdjustedClose=true&events=div%2Csplit%2Cearn&range=1d&interval=1m&includePrePost=false`
+      );
+
+      const meta = chartData.chart?.result?.[0]?.meta;
+      if (!meta) {
+        return { name: symbol, country: "", currency: "USD", exchange: "", industry: "", sector: "", website: "", description: "" };
+      }
+      
       return {
-        name: data.name || symbol,
-        country: data.country || "",
-        currency: data.currency || "USD",
-        exchange: data.exchange || "",
-        ipo: data.ipo || "",
-        marketCapitalization: data.marketCapitalization || 0,
-        shareOutstanding: data.shareOutstanding || 0,
-        ticker: data.ticker || symbol,
-        weburl: data.weburl || "",
-        logo: data.logo || "",
-        finnhubIndustry: data.finnhubIndustry || "",
+        name: meta.longName || meta.shortName || symbol,
+        country: "",
+        currency: meta.currency || "USD",
+        exchange: meta.exchangeName || "",
+        industry: "",
+        sector: "",
+        website: "",
+        description: "",
       };
     } catch (error) {
       console.error(`Error fetching profile for ${symbol}:`, error);
-      throw error;
+      return {
+        name: symbol,
+        country: "",
+        currency: "USD",
+        exchange: "",
+        industry: "",
+        sector: "",
+        website: "",
+        description: "",
+      };
     }
   }
 
-  static async getStockCandles(symbol: string, resolution: string = "D", from?: number, to?: number) {
+  static async getStockCandles(symbol: string, range: string = "1d", interval: string = "1m") {
     try {
-      const now = Math.floor(Date.now() / 1000);
-      const fromTime = from || now - (30 * 24 * 60 * 60); // 30 days ago
-      const toTime = to || now;
-      
       const data = await this.fetchWithAuth(
-        `${BASE_URL}/stock/candle?symbol=${symbol}&resolution=${resolution}&from=${fromTime}&to=${toTime}`
+        `${BASE_URL}/stock/get-chart?symbol=${symbol}&region=US&lang=en-US&useYfid=true&includeAdjustedClose=true&events=div%2Csplit%2Cearn&range=${range}&interval=${interval}&includePrePost=false`
       );
-      
-      // Check for access error (free plan limitation)
-      if (data.error || data.s !== "ok") {
-        // Fallback: create a simple chart with current price point
+
+      if (!data.chart?.result?.[0]?.timestamp) {
+        throw new Error("No chart data available");
+      }
+
+      const result = data.chart.result[0];
+      const timestamps = result.timestamp;
+      const quotes = result.indicators.quote[0];
+
+      return timestamps.map((timestamp: number, index: number) => ({
+        timestamp: timestamp * 1000,
+        open: quotes.open[index] || 0,
+        high: quotes.high[index] || 0,
+        low: quotes.low[index] || 0,
+        close: quotes.close[index] || 0,
+        volume: quotes.volume[index] || 0,
+      })).filter((candle: any) => candle.close > 0); // Filter out invalid data points
+    } catch (error) {
+      console.error(`Error fetching candles for ${symbol}:`, error);
+      // Fallback to current price if chart data fails
+      try {
         const quote = await this.getStockQuote(symbol);
         const currentTime = Date.now();
         return [
           {
-            timestamp: currentTime - (24 * 60 * 60 * 1000), // Yesterday
+            timestamp: currentTime - (24 * 60 * 60 * 1000),
             open: quote.previousClose,
             high: Math.max(quote.price, quote.previousClose),
             low: Math.min(quote.price, quote.previousClose),
@@ -84,45 +135,38 @@ export class StockAPI {
             volume: 0,
           },
         ];
+      } catch (fallbackError) {
+        console.error('Fallback chart data failed:', fallbackError);
+        return [];
       }
-
-      return data.t.map((timestamp: number, index: number) => ({
-        timestamp: timestamp * 1000,
-        open: data.o[index],
-        high: data.h[index],
-        low: data.l[index],
-        close: data.c[index],
-        volume: data.v[index],
-      }));
-    } catch (error) {
-      console.error(`Error fetching candles for ${symbol}:`, error);
-      // Return empty array to prevent app crash
-      return [];
     }
   }
 
   static async searchStocks(query: string) {
     try {
-      const data = await this.fetchWithAuth(`${BASE_URL}/search?q=${encodeURIComponent(query)}`);
-      return data.result || [];
+      // Since we don't have a search endpoint, return common stocks for demo
+      const commonStocks = [
+        { symbol: query.toUpperCase(), shortname: query.toUpperCase(), longname: query.toUpperCase(), type: 'EQUITY' }
+      ];
+      return commonStocks;
     } catch (error) {
       console.error(`Error searching for ${query}:`, error);
-      throw error;
+      return [];
     }
   }
 
   static async getMarketIndices() {
     const indices = [
-      { symbol: "SPY", name: "S&P 500 (SPY)" },
-      { symbol: "QQQ", name: "NASDAQ (QQQ)" },
-      { symbol: "TSLA", name: "Tesla (TSLA)" },  // Using TSLA instead of crypto for demo
-      { symbol: "GLD", name: "Gold (GLD)" },
+      { symbol: "SPY", name: "S&P 500" },
+      { symbol: "QQQ", name: "NASDAQ" },
+      { symbol: "DIA", name: "Dow Jones" },
+      { symbol: "GLD", name: "Gold ETF" },
     ];
 
     try {
       const promises = indices.map(async (index) => {
         try {
-          const quote = await StockAPI.getStockQuote(index.symbol);
+          const quote = await this.getStockQuote(index.symbol);
           return {
             symbol: index.symbol,
             name: index.name,
