@@ -1,10 +1,12 @@
 import React, { createContext, useContext, useEffect, useState } from "react";
-import { Stock } from "../types/stock";
+import { Stock, SubPortfolio } from "../types/stock";
 import { PortfolioStorage } from "../lib/portfolio-storage";
 import { StockAPI } from "../lib/stock-api";
 
 interface PortfolioContextType {
   stocks: Stock[];
+  subPortfolios: SubPortfolio[];
+  currentPortfolioId: string | null;
   portfolioMetrics: {
     totalValue: number;
     totalInvested: number;
@@ -17,18 +19,31 @@ interface PortfolioContextType {
   updateStock: (id: string, updates: Partial<Stock>) => void;
   deleteStock: (id: string) => void;
   refreshPrices: () => Promise<void>;
+  addSubPortfolio: (portfolio: Omit<SubPortfolio, "id" | "createdAt">) => SubPortfolio;
+  deleteSubPortfolio: (id: string) => void;
+  setCurrentPortfolio: (id: string | null) => void;
 }
 
 const PortfolioContext = createContext<PortfolioContextType | undefined>(undefined);
 
 export function PortfolioProvider({ children }: { children: React.ReactNode }) {
   const [stocks, setStocks] = useState<Stock[]>([]);
+  const [subPortfolios, setSubPortfolios] = useState<SubPortfolio[]>([]);
+  const [currentPortfolioId, setCurrentPortfolioId] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(true);
 
   const loadPortfolio = async () => {
     try {
       setIsLoading(true);
-      const storedStocks = PortfolioStorage.getPortfolio();
+      
+      // Load sub-portfolios
+      const storedSubPortfolios = PortfolioStorage.getSubPortfolios();
+      setSubPortfolios(storedSubPortfolios);
+      
+      // Load stocks
+      const storedStocks = currentPortfolioId 
+        ? PortfolioStorage.getStocksByPortfolio(currentPortfolioId)
+        : PortfolioStorage.getPortfolio();
       
       if (storedStocks.length > 0) {
         // Update current prices
@@ -44,7 +59,9 @@ export function PortfolioProvider({ children }: { children: React.ReactNode }) {
           })
         );
         setStocks(updatedStocks);
-        PortfolioStorage.savePortfolio(updatedStocks);
+        PortfolioStorage.savePortfolio(PortfolioStorage.getPortfolio().map(s => 
+          updatedStocks.find(us => us.id === s.id) || s
+        ));
       } else {
         setStocks([]);
       }
@@ -58,6 +75,11 @@ export function PortfolioProvider({ children }: { children: React.ReactNode }) {
 
   const addStock = async (stockData: Omit<Stock, "id" | "currentPrice">) => {
     try {
+      // Check if we have a current portfolio selected
+      if (!currentPortfolioId) {
+        throw new Error("Please select a sub-portfolio before adding stocks");
+      }
+
       // Get current price and company name
       const [quote, profile] = await Promise.all([
         StockAPI.getStockQuote(stockData.symbol),
@@ -66,6 +88,7 @@ export function PortfolioProvider({ children }: { children: React.ReactNode }) {
 
       const newStock = PortfolioStorage.addStock({
         ...stockData,
+        portfolioId: currentPortfolioId,
         name: profile.name || stockData.symbol,
         currentPrice: quote.price,
       });
@@ -114,7 +137,26 @@ export function PortfolioProvider({ children }: { children: React.ReactNode }) {
 
   useEffect(() => {
     loadPortfolio();
-  }, []);
+  }, [currentPortfolioId]);
+
+  const addSubPortfolio = (portfolioData: Omit<SubPortfolio, "id" | "createdAt">) => {
+    const newPortfolio = PortfolioStorage.addSubPortfolio(portfolioData);
+    setSubPortfolios(prev => [...prev, newPortfolio]);
+    return newPortfolio;
+  };
+
+  const deleteSubPortfolio = (id: string) => {
+    PortfolioStorage.deleteSubPortfolio(id);
+    setSubPortfolios(prev => prev.filter(p => p.id !== id));
+    if (currentPortfolioId === id) {
+      setCurrentPortfolioId(null);
+      setStocks([]);
+    }
+  };
+
+  const setCurrentPortfolio = (id: string | null) => {
+    setCurrentPortfolioId(id);
+  };
 
   const portfolioMetrics = PortfolioStorage.calculatePortfolioMetrics(stocks);
 
@@ -122,12 +164,17 @@ export function PortfolioProvider({ children }: { children: React.ReactNode }) {
     <PortfolioContext.Provider
       value={{
         stocks: portfolioMetrics.stocks,
+        subPortfolios,
+        currentPortfolioId,
         portfolioMetrics,
         isLoading,
         addStock,
         updateStock,
         deleteStock,
         refreshPrices,
+        addSubPortfolio,
+        deleteSubPortfolio,
+        setCurrentPortfolio,
       }}
     >
       {children}

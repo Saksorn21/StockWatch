@@ -1,5 +1,7 @@
 const RAPIDAPI_KEY = import.meta.env.VITE_RAPIDAPI_KEY || "default_key";
+const FINNHUB_API_KEY = import.meta.env.VITE_FINNHUB_API_KEY || "default_key";
 const BASE_URL = "https://yahoo-finance-real-time1.p.rapidapi.com";
+const FINNHUB_BASE_URL = "https://finnhub.io/api/v1";
 
 export class StockAPI {
   private static async fetchWithAuth(url: string) {
@@ -157,22 +159,32 @@ export class StockAPI {
 
   static async getMarketIndices() {
     const indices = [
-      { symbol: "SPY", name: "S&P 500" },
-      { symbol: "QQQ", name: "NASDAQ" },
-      { symbol: "DIA", name: "Dow Jones" },
-      { symbol: "GLD", name: "Gold ETF" },
+      { symbol: "^GSPC", name: "S&P 500" },
+      { symbol: "^IXIC", name: "NASDAQ" },
+      { symbol: "^DJI", name: "Dow Jones" },
+      { symbol: "BTCUSD", name: "Bitcoin" },
     ];
 
     try {
       const promises = indices.map(async (index) => {
         try {
-          const quote = await this.getStockQuote(index.symbol);
+          // Use Finnhub for market indices as it supports index symbols
+          const response = await fetch(
+            `${FINNHUB_BASE_URL}/quote?symbol=${index.symbol}&token=${FINNHUB_API_KEY}`
+          );
+          
+          if (!response.ok) {
+            throw new Error(`Finnhub API request failed: ${response.statusText}`);
+          }
+          
+          const data = await response.json();
+          
           return {
             symbol: index.symbol,
             name: index.name,
-            price: quote.price,
-            change: quote.change,
-            changePercent: quote.changePercent,
+            price: data.c || 0, // current price
+            change: data.d || 0, // change
+            changePercent: data.dp || 0, // change percent
           };
         } catch (error) {
           console.error(`Error fetching ${index.symbol}:`, error);

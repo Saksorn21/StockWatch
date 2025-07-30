@@ -6,9 +6,17 @@ export interface Stock {
   costPrice: number;
   shares: number;
   targetAllocation: number;
+  portfolioId?: string; // Add portfolio association
   currentAllocation?: number;
   profitLoss?: number;
   profitLossPercent?: number;
+}
+
+export interface SubPortfolio {
+  id: string;
+  name: string;
+  description?: string;
+  createdAt: string;
 }
 
 export interface MarketIndex {

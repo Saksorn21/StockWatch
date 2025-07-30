@@ -1,6 +1,7 @@
-import { Stock } from "../types/stock";
+import { Stock, SubPortfolio } from "../types/stock";
 
 const PORTFOLIO_KEY = "portfolio_stocks";
+const SUB_PORTFOLIOS_KEY = "sub_portfolios";
 
 export class PortfolioStorage {
   static getPortfolio(): Stock[] {
@@ -50,6 +51,55 @@ export class PortfolioStorage {
     const portfolio = this.getPortfolio();
     const filtered = portfolio.filter(stock => stock.id !== id);
     this.savePortfolio(filtered);
+  }
+
+  // Sub-portfolio management
+  static getSubPortfolios(): SubPortfolio[] {
+    try {
+      const stored = localStorage.getItem(SUB_PORTFOLIOS_KEY);
+      return stored ? JSON.parse(stored) : [];
+    } catch (error) {
+      console.error("Error loading sub-portfolios:", error);
+      return [];
+    }
+  }
+
+  static saveSubPortfolios(subPortfolios: SubPortfolio[]): void {
+    try {
+      localStorage.setItem(SUB_PORTFOLIOS_KEY, JSON.stringify(subPortfolios));
+    } catch (error) {
+      console.error("Error saving sub-portfolios:", error);
+      throw new Error("Failed to save sub-portfolios");
+    }
+  }
+
+  static addSubPortfolio(subPortfolio: Omit<SubPortfolio, "id" | "createdAt">): SubPortfolio {
+    const subPortfolios = this.getSubPortfolios();
+    const newSubPortfolio: SubPortfolio = {
+      ...subPortfolio,
+      id: Date.now().toString(),
+      createdAt: new Date().toISOString(),
+    };
+    
+    subPortfolios.push(newSubPortfolio);
+    this.saveSubPortfolios(subPortfolios);
+    return newSubPortfolio;
+  }
+
+  static deleteSubPortfolio(id: string): void {
+    const subPortfolios = this.getSubPortfolios();
+    const filtered = subPortfolios.filter(portfolio => portfolio.id !== id);
+    this.saveSubPortfolios(filtered);
+    
+    // Also remove all stocks from this portfolio
+    const stocks = this.getPortfolio();
+    const filteredStocks = stocks.filter(stock => stock.portfolioId !== id);
+    this.savePortfolio(filteredStocks);
+  }
+
+  static getStocksByPortfolio(portfolioId: string): Stock[] {
+    const allStocks = this.getPortfolio();
+    return allStocks.filter(stock => stock.portfolioId === portfolioId);
   }
 
   static calculatePortfolioMetrics(stocks: Stock[]) {

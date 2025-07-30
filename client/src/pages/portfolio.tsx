@@ -6,19 +6,60 @@ import { PortfolioOverview } from "../components/portfolio/portfolio-overview";
 import { AllocationChart } from "../components/portfolio/allocation-chart";
 import { StockList } from "../components/portfolio/stock-list";
 import { AddStockModal } from "../components/portfolio/add-stock-modal";
+import { PortfolioSelector } from "../components/portfolio/portfolio-selector";
 import { useToast } from "@/hooks/use-toast";
 
 export default function Portfolio() {
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
-  const { stocks, portfolioMetrics, isLoading, addStock, deleteStock } = usePortfolio();
+  const { 
+    stocks, 
+    subPortfolios, 
+    currentPortfolioId, 
+    portfolioMetrics, 
+    isLoading, 
+    addStock, 
+    deleteStock,
+    addSubPortfolio,
+    deleteSubPortfolio,
+    setCurrentPortfolio 
+  } = usePortfolio();
   const { toast } = useToast();
 
   const handleAddStock = async (stockData: any) => {
     try {
+      if (!currentPortfolioId) {
+        toast({
+          title: "No Portfolio Selected",
+          description: "Please select a sub-portfolio before adding stocks.",
+          variant: "destructive",
+        });
+        return;
+      }
       await addStock(stockData);
+      toast({
+        title: "Stock Added",
+        description: `${stockData.symbol} has been added to your portfolio.`,
+      });
     } catch (error) {
       throw error; // Re-throw to be handled by the modal
     }
+  };
+
+  const handleCreatePortfolio = (portfolioData: any) => {
+    const newPortfolio = addSubPortfolio(portfolioData);
+    setCurrentPortfolio(newPortfolio.id);
+    toast({
+      title: "Portfolio Created",
+      description: `"${portfolioData.name}" portfolio has been created.`,
+    });
+  };
+
+  const handleDeletePortfolio = (id: string) => {
+    deleteSubPortfolio(id);
+    toast({
+      title: "Portfolio Deleted",
+      description: "Portfolio and all its stocks have been removed.",
+    });
   };
 
   const handleDeleteStock = (id: string) => {
@@ -44,21 +85,41 @@ export default function Portfolio() {
         </div>
         <Button
           onClick={() => setIsAddModalOpen(true)}
-          className="bg-primary hover:bg-primary-dark text-white"
+          disabled={!currentPortfolioId}
+          className="bg-primary hover:bg-primary-dark text-white disabled:opacity-50"
         >
           <Plus className="w-4 h-4 mr-2" />
           Add Stock
         </Button>
       </div>
 
-      {/* Portfolio Overview */}
-      <PortfolioOverview metrics={portfolioMetrics} isLoading={isLoading} />
+      {/* Portfolio Selector */}
+      <PortfolioSelector
+        subPortfolios={subPortfolios}
+        currentPortfolioId={currentPortfolioId}
+        onSelectPortfolio={setCurrentPortfolio}
+        onCreatePortfolio={handleCreatePortfolio}
+        onDeletePortfolio={handleDeletePortfolio}
+      />
 
-      {/* Portfolio Content */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-        <AllocationChart stocks={stocks} />
-        <StockList stocks={stocks} onEdit={handleEditStock} onDelete={handleDeleteStock} />
-      </div>
+      {/* Show content only if portfolio is selected */}
+      {currentPortfolioId ? (
+        <>
+          {/* Portfolio Overview */}
+          <PortfolioOverview metrics={portfolioMetrics} isLoading={isLoading} />
+
+          {/* Portfolio Content */}
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+            <AllocationChart stocks={stocks} />
+            <StockList stocks={stocks} onEdit={handleEditStock} onDelete={handleDeleteStock} />
+          </div>
+        </>
+      ) : (
+        <div className="text-center py-12 bg-gray-50 rounded-lg">
+          <h3 className="text-lg font-medium text-gray-900 mb-2">Select a Portfolio</h3>
+          <p className="text-gray-600">Choose a sub-portfolio above to view your stocks and portfolio metrics.</p>
+        </div>
+      )}
 
       {/* Add Stock Modal */}
       <AddStockModal
