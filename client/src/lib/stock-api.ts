@@ -61,8 +61,29 @@ export class StockAPI {
         `${BASE_URL}/stock/candle?symbol=${symbol}&resolution=${resolution}&from=${fromTime}&to=${toTime}`
       );
       
-      if (data.s !== "ok") {
-        throw new Error("No data available");
+      // Check for access error (free plan limitation)
+      if (data.error || data.s !== "ok") {
+        // Fallback: create a simple chart with current price point
+        const quote = await this.getStockQuote(symbol);
+        const currentTime = Date.now();
+        return [
+          {
+            timestamp: currentTime - (24 * 60 * 60 * 1000), // Yesterday
+            open: quote.previousClose,
+            high: Math.max(quote.price, quote.previousClose),
+            low: Math.min(quote.price, quote.previousClose),
+            close: quote.previousClose,
+            volume: 0,
+          },
+          {
+            timestamp: currentTime,
+            open: quote.previousClose,
+            high: quote.high || quote.price,
+            low: quote.low || quote.price,
+            close: quote.price,
+            volume: 0,
+          },
+        ];
       }
 
       return data.t.map((timestamp: number, index: number) => ({
@@ -75,7 +96,8 @@ export class StockAPI {
       }));
     } catch (error) {
       console.error(`Error fetching candles for ${symbol}:`, error);
-      throw error;
+      // Return empty array to prevent app crash
+      return [];
     }
   }
 

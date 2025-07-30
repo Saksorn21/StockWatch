@@ -124,30 +124,41 @@ export function StockChart({ symbol }: StockChartProps) {
               <Skeleton className="h-full w-full rounded-lg" />
             </div>
           ) : chartData && chartData.length > 0 ? (
-            <ResponsiveContainer width="100%" height="100%">
-              <LineChart data={chartData}>
-                <CartesianGrid strokeDasharray="3 3" />
-                <XAxis
-                  dataKey="timestamp"
-                  tickFormatter={(value) => new Date(value).toLocaleDateString()}
-                />
-                <YAxis domain={["dataMin - 5", "dataMax + 5"]} />
-                <Tooltip
-                  labelFormatter={(value) => new Date(value).toLocaleDateString()}
-                  formatter={(value: number) => [`$${value.toFixed(2)}`, "Price"]}
-                />
-                <Line
-                  type="monotone"
-                  dataKey="close"
-                  stroke="hsl(207, 90%, 54%)"
-                  strokeWidth={2}
-                  dot={false}
-                />
-              </LineChart>
-            </ResponsiveContainer>
+            <div className="h-full">
+              <ResponsiveContainer width="100%" height="100%">
+                <LineChart data={chartData}>
+                  <CartesianGrid strokeDasharray="3 3" />
+                  <XAxis
+                    dataKey="timestamp"
+                    tickFormatter={(value) => new Date(value).toLocaleDateString()}
+                  />
+                  <YAxis domain={["dataMin - 5", "dataMax + 5"]} />
+                  <Tooltip
+                    labelFormatter={(value) => new Date(value).toLocaleDateString()}
+                    formatter={(value: number) => [`$${value.toFixed(2)}`, "Price"]}
+                  />
+                  <Line
+                    type="monotone"
+                    dataKey="close"
+                    stroke="hsl(207, 90%, 54%)"
+                    strokeWidth={2}
+                    dot={chartData.length <= 2}
+                    strokeDasharray={chartData.length <= 2 ? "5,5" : undefined}
+                  />
+                </LineChart>
+              </ResponsiveContainer>
+              {chartData.length <= 2 && (
+                <p className="text-xs text-gray-500 text-center mt-2">
+                  Limited chart data - showing current price trend
+                </p>
+              )}
+            </div>
           ) : (
             <div className="h-full bg-gray-50 rounded-lg flex items-center justify-center">
-              <p className="text-gray-500">No chart data available</p>
+              <div className="text-center">
+                <p className="text-gray-500 mb-2">Historical chart data unavailable</p>
+                <p className="text-xs text-gray-400">Requires premium API access</p>
+              </div>
             </div>
           )}
         </div>
