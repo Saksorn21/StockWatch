@@ -9,6 +9,8 @@ import { Navigation } from "./components/layout/navigation";
 import Dashboard from "./pages/dashboard";
 import Portfolio from "./pages/portfolio";
 import Rebalance from "./pages/rebalance";
+import SharedPortfolio from "./pages/shared-portfolio";
+import ComparePortfolios from "./pages/compare-portfolios";
 import NotFound from "./pages/not-found";
 
 function Router() {
@@ -17,6 +19,8 @@ function Router() {
       <Route path="/" component={Dashboard} />
       <Route path="/portfolio" component={Portfolio} />
       <Route path="/rebalance" component={Rebalance} />
+      <Route path="/shared/:shareId" component={SharedPortfolio} />
+      <Route path="/compare" component={ComparePortfolios} />
       <Route component={NotFound} />
     </Switch>
   );

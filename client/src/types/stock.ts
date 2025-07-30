@@ -56,3 +56,56 @@ export interface RebalanceResult {
   avgCost: number;
   newAllocation: number;
 }
+
+export interface SharedPortfolio {
+  id: string;
+  name: string;
+  description?: string;
+  subPortfolios: SubPortfolio[];
+  stocks: Stock[];
+  totalValue: number;
+  totalGain: number;
+  totalGainPercent: number;
+  shareId: string;
+  createdAt: string;
+  expiresAt?: string;
+}
+
+export interface PortfolioComparison {
+  portfolios: SharedPortfolio[];
+  comparisonMetrics: {
+    totalValueComparison: Array<{
+      portfolioId: string;
+      portfolioName: string;
+      totalValue: number;
+      totalGain: number;
+      totalGainPercent: number;
+    }>;
+    allocationComparison: Array<{
+      symbol: string;
+      name: string;
+      portfolios: Array<{
+        portfolioId: string;
+        portfolioName: string;
+        allocation: number;
+        value: number;
+      }>;
+    }>;
+    performanceComparison: Array<{
+      portfolioId: string;
+      portfolioName: string;
+      topPerformers: Array<{
+        symbol: string;
+        name: string;
+        gainPercent: number;
+        value: number;
+      }>;
+      bottomPerformers: Array<{
+        symbol: string;
+        name: string;
+        gainPercent: number;
+        value: number;
+      }>;
+    }>;
+  };
+}

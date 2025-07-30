@@ -1,6 +1,7 @@
 import { useState } from "react";
-import { Plus } from "lucide-react";
+import { Plus, Share2, BarChart3 } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { Link } from "wouter";
 import { usePortfolio } from "../contexts/portfolio-context";
 import { PortfolioOverview } from "../components/portfolio/portfolio-overview";
 import { AllocationChart } from "../components/portfolio/allocation-chart";
@@ -8,10 +9,12 @@ import { StockList } from "../components/portfolio/stock-list";
 import { AddStockModal } from "../components/portfolio/add-stock-modal";
 import { PortfolioSelector } from "../components/portfolio/portfolio-selector";
 import { PortfolioAllocationChart } from "../components/portfolio/portfolio-allocation-chart";
+import { SharePortfolioModal } from "../components/portfolio/share-portfolio-modal";
 import { useToast } from "@/hooks/use-toast";
 
 export default function Portfolio() {
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
+  const [isShareModalOpen, setIsShareModalOpen] = useState(false);
   const { 
     stocks, 
     subPortfolios, 
@@ -85,14 +88,30 @@ export default function Portfolio() {
           <h2 className="text-2xl font-bold text-gray-900">Personal Portfolio</h2>
           <p className="text-gray-600 mt-1">Track your investments and monitor performance</p>
         </div>
-        <Button
-          onClick={() => setIsAddModalOpen(true)}
-          disabled={!currentPortfolioId}
-          className="bg-primary hover:bg-primary-dark text-white disabled:opacity-50"
-        >
-          <Plus className="w-4 h-4 mr-2" />
-          Add Stock
-        </Button>
+        <div className="flex space-x-2">
+          <Link href="/compare">
+            <Button variant="outline">
+              <BarChart3 className="w-4 h-4 mr-2" />
+              Compare
+            </Button>
+          </Link>
+          <Button
+            onClick={() => setIsShareModalOpen(true)}
+            variant="outline"
+            disabled={subPortfolios.length === 0 || getAllPortfolioStocks().length === 0}
+          >
+            <Share2 className="w-4 h-4 mr-2" />
+            Share
+          </Button>
+          <Button
+            onClick={() => setIsAddModalOpen(true)}
+            disabled={!currentPortfolioId}
+            className="bg-primary hover:bg-primary-dark text-white disabled:opacity-50"
+          >
+            <Plus className="w-4 h-4 mr-2" />
+            Add Stock
+          </Button>
+        </div>
       </div>
 
       {/* Portfolio Selector */}
@@ -136,6 +155,19 @@ export default function Portfolio() {
         isOpen={isAddModalOpen}
         onClose={() => setIsAddModalOpen(false)}
         onAdd={handleAddStock}
+      />
+
+      {/* Share Portfolio Modal */}
+      <SharePortfolioModal
+        isOpen={isShareModalOpen}
+        onClose={() => setIsShareModalOpen(false)}
+        portfolioData={{
+          subPortfolios,
+          stocks: getAllPortfolioStocks(),
+          totalValue: portfolioMetrics.totalValue,
+          totalGain: portfolioMetrics.totalGain,
+          totalGainPercent: portfolioMetrics.totalGainPercent,
+        }}
       />
     </div>
   );
