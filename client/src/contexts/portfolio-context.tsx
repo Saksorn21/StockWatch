@@ -40,10 +40,10 @@ export function PortfolioProvider({ children }: { children: React.ReactNode }) {
       const storedSubPortfolios = PortfolioStorage.getSubPortfolios();
       setSubPortfolios(storedSubPortfolios);
       
-      // Load stocks
+      // Load stocks - only for current portfolio if one is selected
       const storedStocks = currentPortfolioId 
         ? PortfolioStorage.getStocksByPortfolio(currentPortfolioId)
-        : PortfolioStorage.getPortfolio();
+        : [];
       
       if (storedStocks.length > 0) {
         // Update current prices

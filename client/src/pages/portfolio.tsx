@@ -7,6 +7,7 @@ import { AllocationChart } from "../components/portfolio/allocation-chart";
 import { StockList } from "../components/portfolio/stock-list";
 import { AddStockModal } from "../components/portfolio/add-stock-modal";
 import { PortfolioSelector } from "../components/portfolio/portfolio-selector";
+import { PortfolioAllocationChart } from "../components/portfolio/portfolio-allocation-chart";
 import { useToast } from "@/hooks/use-toast";
 
 export default function Portfolio() {
@@ -102,6 +103,14 @@ export default function Portfolio() {
         onDeletePortfolio={handleDeletePortfolio}
       />
 
+      {/* Portfolio Allocation Overview */}
+      {subPortfolios.length > 0 && (
+        <PortfolioAllocationChart 
+          subPortfolios={subPortfolios} 
+          totalValue={0} // We'll calculate this properly when we have all stocks loaded
+        />
+      )}
+
       {/* Show content only if portfolio is selected */}
       {currentPortfolioId ? (
         <>
@@ -114,12 +123,12 @@ export default function Portfolio() {
             <StockList stocks={stocks} onEdit={handleEditStock} onDelete={handleDeleteStock} />
           </div>
         </>
-      ) : (
+      ) : subPortfolios.length > 0 ? (
         <div className="text-center py-12 bg-gray-50 rounded-lg">
           <h3 className="text-lg font-medium text-gray-900 mb-2">Select a Portfolio</h3>
           <p className="text-gray-600">Choose a sub-portfolio above to view your stocks and portfolio metrics.</p>
         </div>
-      )}
+      ) : null}
 
       {/* Add Stock Modal */}
       <AddStockModal

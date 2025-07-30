@@ -16,6 +16,7 @@ export interface SubPortfolio {
   id: string;
   name: string;
   description?: string;
+  targetAllocation: number; // Percentage allocation for this sub-portfolio
   createdAt: string;
 }
 

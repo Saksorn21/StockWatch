@@ -22,6 +22,7 @@ interface CreatePortfolioModalProps {
 export function CreatePortfolioModal({ isOpen, onClose, onCreate }: CreatePortfolioModalProps) {
   const [name, setName] = useState("");
   const [description, setDescription] = useState("");
+  const [targetAllocation, setTargetAllocation] = useState(0);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -33,11 +34,13 @@ export function CreatePortfolioModal({ isOpen, onClose, onCreate }: CreatePortfo
       onCreate({
         name: name.trim(),
         description: description.trim() || undefined,
+        targetAllocation,
       });
       
       // Reset form
       setName("");
       setDescription("");
+      setTargetAllocation(0);
       onClose();
     } catch (error) {
       console.error("Error creating portfolio:", error);
@@ -49,6 +52,7 @@ export function CreatePortfolioModal({ isOpen, onClose, onCreate }: CreatePortfo
   const handleClose = () => {
     setName("");
     setDescription("");
+    setTargetAllocation(0);
     onClose();
   };
 
@@ -82,6 +86,20 @@ export function CreatePortfolioModal({ isOpen, onClose, onCreate }: CreatePortfo
               onChange={(e) => setDescription(e.target.value)}
               placeholder="Brief description of this portfolio's investment strategy"
               rows={3}
+            />
+          </div>
+          
+          <div className="space-y-2">
+            <Label htmlFor="target-allocation">Target Allocation (%)</Label>
+            <Input
+              id="target-allocation"
+              type="number"
+              min="0"
+              max="100"
+              step="0.1"
+              value={targetAllocation}
+              onChange={(e) => setTargetAllocation(parseFloat(e.target.value) || 0)}
+              placeholder="e.g. 25.5"
             />
           </div>
           

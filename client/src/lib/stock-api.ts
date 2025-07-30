@@ -159,32 +159,23 @@ export class StockAPI {
 
   static async getMarketIndices() {
     const indices = [
-      { symbol: "^GSPC", name: "S&P 500" },
-      { symbol: "^IXIC", name: "NASDAQ" },
-      { symbol: "^DJI", name: "Dow Jones" },
-      { symbol: "BTCUSD", name: "Bitcoin" },
+      { symbol: "SPY", name: "S&P 500 ETF" },
+      { symbol: "QQQ", name: "NASDAQ ETF" },
+      { symbol: "DIA", name: "Dow Jones ETF" },
+      { symbol: "GLD", name: "Gold ETF" },
     ];
 
     try {
       const promises = indices.map(async (index) => {
         try {
-          // Use Finnhub for market indices as it supports index symbols
-          const response = await fetch(
-            `${FINNHUB_BASE_URL}/quote?symbol=${index.symbol}&token=${FINNHUB_API_KEY}`
-          );
-          
-          if (!response.ok) {
-            throw new Error(`Finnhub API request failed: ${response.statusText}`);
-          }
-          
-          const data = await response.json();
-          
+          // Use Yahoo Finance API for ETFs since they're tradeable securities
+          const quote = await this.getStockQuote(index.symbol);
           return {
             symbol: index.symbol,
             name: index.name,
-            price: data.c || 0, // current price
-            change: data.d || 0, // change
-            changePercent: data.dp || 0, // change percent
+            price: quote.price,
+            change: quote.change,
+            changePercent: quote.changePercent,
           };
         } catch (error) {
           console.error(`Error fetching ${index.symbol}:`, error);
