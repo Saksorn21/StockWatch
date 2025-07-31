@@ -18,21 +18,20 @@ export class StockAPI {
     }
     return response.json();
   }
-
   static async getStockQuote(symbol: string) {
     try {
       // Use chart data to get the latest price since quote endpoint might not exist
       const chartData = await this.fetchWithAuth(
-        `${BASE_URL}/stock/get-chart?symbol=${symbol}&region=US&lang=en-US&useYfid=true&includeAdjustedClose=true&events=div%2Csplit%2Cearn&range=1d&interval=1m&includePrePost=false`
+        `${BASE_URL}/stock/get-chart?symbol=${symbol}&region=US&lang=en-US&useYfid=true&includeAdjustedClose=true&range=1d&interval=1m&includePrePost=false`
       );
-
+      
       if (!chartData.chart?.result?.[0]) {
         throw new Error(`No quote data found for ${symbol}`);
       }
 
       const result = chartData.chart.result[0];
       const meta = result.meta;
-      const prices = result.indicators?.quote?.[0];
+      const prices = result.indicators?.quote[0];
       
       // Get latest price from the chart data
       const latestIndex = Math.max(0, (prices?.close?.length || 1) - 1);
@@ -159,28 +158,34 @@ export class StockAPI {
 
   static async getMarketIndices() {
     const indices = [
-      { symbol: "SPY", name: "S&P 500 ETF" },
-      { symbol: "QQQ", name: "NASDAQ ETF" },
-      { symbol: "DIA", name: "Dow Jones ETF" },
-      { symbol: "GLD", name: "Gold ETF" },
+      { symbol: "^GSPC", name: "S&P 500" },
+   //   { symbol: "^IXIC", name: "Nasdaq Composite" },
+  //   { symbol: "^DJI", name: "Dow Jones" },
+  //    { symbol: "GC=F", name: "Gold Spot" },
+  //     { symbol: "BTC-USD", name: "Bitcoin" },
     ];
-
+    
     try {
+      console.log(await StockAPI.getStockQuote("^IXIC"))
       const promises = indices.map(async (index) => {
-        try {
-          // Use the same method as regular stock quotes to ensure consistency
-          const quote = await this.getStockQuote(index.symbol);
-          return {
-            symbol: index.symbol,
-            name: index.name,
-            price: quote.price,
-            change: quote.change,
-            changePercent: quote.changePercent,
-          };
-        } catch (error) {
-          console.error(`Error fetching ${index.symbol}:`, error);
+          try {
+            const quote = await StockAPI.getStockQuote(index.symbol);
+            console.log("1",quote)
+            if (!quote || !isFinite(quote.price)) throw new Error("Invalid quote");
+
+            return {
+              symbol: index.symbol,
+              name: index.name,
+              price: quote.price ?? "0",
+              change: quote.change ?? "0",
+              changePercent: quote.changePercent ?? "0%",
+            };
+          } catch (error) {
+            console.error(`Error fetching ${index.symbol}:`, error);
+            // ... mock fallback
+          
           // Return mock data for display purposes during development
-          const mockPrices = { SPY: 542.31, QQQ: 501.28, DIA: 444.12, GLD: 242.89 };
+          const mockPrices = { "^GSPC": 542.31, QQQ: 501.28, DIA: 444.12, GLD: 242.89 };
           const basePrice = mockPrices[index.symbol as keyof typeof mockPrices] || 100;
           const change = (Math.random() - 0.5) * 5; // Random change between -2.5 and +2.5
           return {
