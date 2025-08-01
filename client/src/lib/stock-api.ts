@@ -159,10 +159,10 @@ export class StockAPI {
   static async getMarketIndices() {
     const indices = [
       { symbol: "^GSPC", name: "S&P 500" },
-   //   { symbol: "^IXIC", name: "Nasdaq Composite" },
-  //   { symbol: "^DJI", name: "Dow Jones" },
-  //    { symbol: "GC=F", name: "Gold Spot" },
-  //     { symbol: "BTC-USD", name: "Bitcoin" },
+      { symbol: "^IXIC", name: "Nasdaq Composite" },
+     { symbol: "^DJI", name: "Dow Jones" },
+      { symbol: "GC=F", name: "Gold Spot" },
+       { symbol: "BTC-USD", name: "BTCUSD" },
     ];
     
     try {

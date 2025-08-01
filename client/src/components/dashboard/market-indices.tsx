@@ -15,9 +15,9 @@ export function MarketIndices() {
 
   const getIcon = (symbol: string) => {
     switch (symbol) {
-      case "BTCUSD":
+      case "BTC-USD":
         return <DollarSign className="h-4 w-4 text-gray-400" />;
-      case "XAUUSD":
+      case "GC=F":
         return <Star className="h-4 w-4 text-gray-400" />;
       default:
         return <TrendingUp className="h-4 w-4 text-gray-400" />;
