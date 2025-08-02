@@ -12,7 +12,10 @@ import Rebalance from "./pages/rebalance";
 import SharedPortfolio from "./pages/shared-portfolio";
 import ComparePortfolios from "./pages/compare-portfolios";
 import NotFound from "./pages/not-found";
-
+import { AuthProvider } from "./contexts/AuthContext"; 
+import Register from "./components/auth/Register"
+import Login from "./components/auth/Login"
+import Verify from "./components/auth/VerifyOtp"
 function Router() {
   return (
     <Switch>
@@ -21,6 +24,10 @@ function Router() {
       <Route path="/rebalance" component={Rebalance} />
       <Route path="/shared/:shareId" component={SharedPortfolio} />
       <Route path="/compare" component={ComparePortfolios} />
+      {/* ✅ เสริม Auth Route */}
+      <Route path="/login" component={Login} />
+      <Route path="/register" component={Register} />
+      <Route path="/verify" component={Verify} />
       <Route component={NotFound} />
     </Switch>
   );
@@ -31,6 +38,7 @@ function App() {
     <QueryClientProvider client={queryClient}>
       <TooltipProvider>
         <PortfolioProvider>
+          <AuthProvider>
           <div className="min-h-screen bg-gray-50">
             <Header />
             <Navigation />
@@ -39,6 +47,7 @@ function App() {
             </main>
           </div>
           <Toaster />
+          </AuthProvider>
         </PortfolioProvider>
       </TooltipProvider>
     </QueryClientProvider>
