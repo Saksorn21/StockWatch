@@ -36,6 +36,7 @@ router.post("/verify-otp", async (req, res) => {
   res.json({ message: "Registration complete" });
 });
 
+router.get("/", (req, res) => {})
 // Login normal
 router.post("/login", async (req, res) => {
   const { email, password } = req.body;
