@@ -5,6 +5,17 @@ import { User } from "./models/User.js";
 import { sendOTP, sendReset } from "./mail.js";
 
 const router = express.Router();
+router.get("/me", (req, res) => {
+  const token = req.cookies.token;
+  if (!token) return res.status(401).json({ message: "Unauthorized" });
+
+  try {
+    const user = jwt.verify(token, process.env.JWT_SECRET);
+    res.json({ user }); // ✅ ส่งข้อมูล user กลับ
+  } catch (err) {
+    res.status(401).json({ message: "Invalid token" });
+  }
+});
 
 // Register + OTP
 router.post("/register", async (req, res) => {
@@ -36,7 +47,7 @@ router.post("/verify-otp", async (req, res) => {
   res.json({ message: "Registration complete" });
 });
 
-router.get("/", (req, res) => {})
+
 // Login normal
 router.post("/login", async (req, res) => {
   const { email, password } = req.body;
