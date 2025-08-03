@@ -6,6 +6,7 @@ import { usePortfolio } from "../contexts/portfolio-context";
 import { PortfolioOverview } from "../components/portfolio/portfolio-overview";
 import { AllocationChart } from "../components/portfolio/allocation-chart";
 import { StockList } from "../components/portfolio/stock-list";
+import { AllHoldingsList } from "../components/portfolio/all-holdings-list";
 import { AddStockModal } from "../components/portfolio/add-stock-modal";
 import { PortfolioSelector } from "../components/portfolio/portfolio-selector";
 import { PortfolioAllocationChart } from "../components/portfolio/portfolio-allocation-chart";
@@ -142,6 +143,11 @@ export default function Portfolio() {
             <AllocationChart stocks={stocks} />
             <StockList stocks={stocks} onEdit={handleEditStock} onDelete={handleDeleteStock} />
           </div>
+
+          {/* All Holdings View */}
+          {subPortfolios.length > 1 && getAllPortfolioStocks().length > 0 && (
+            <AllHoldingsList allStocks={getAllPortfolioStocks()} />
+          )}
         </>
       ) : subPortfolios.length > 0 ? (
         <div className="text-center py-12 bg-gray-50 rounded-lg">
