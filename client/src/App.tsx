@@ -8,10 +8,11 @@ import { Header } from "./components/layout/header";
 import { Navigation } from "./components/layout/navigation";
 import Dashboard from "./pages/dashboard";
 import Portfolio from "./pages/portfolio";
+import Performance from "./pages/performance";
 import Rebalance from "./pages/rebalance";
-import SharedPortfolio from "./pages/shared-portfolio";
-import ComparePortfolios from "./pages/compare-portfolios";
 import NotFound from "./pages/not-found";
+import ComparePortfolios from "./pages/compare-portfolios";
+import SharedPortfolio from "./pages/shared-portfolio";
 import { AuthProvider } from "./contexts/AuthContext"; 
 import Register from "./components/auth/Register"
 import Login from "./components/auth/Login"
@@ -21,6 +22,7 @@ function Router() {
     <Switch>
       <Route path="/" component={Dashboard} />
       <Route path="/portfolio" component={Portfolio} />
+      <Route path="/performance" component={Performance} />
       <Route path="/rebalance" component={Rebalance} />
       <Route path="/shared/:shareId" component={SharedPortfolio} />
       <Route path="/compare" component={ComparePortfolios} />

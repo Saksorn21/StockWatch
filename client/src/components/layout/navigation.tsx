@@ -10,6 +10,7 @@ export function Navigation({ className }: NavigationProps) {
   const tabs = [
     { path: "/", label: "Stock Dashboard" },
     { path: "/portfolio", label: "Personal Portfolio" },
+    { path: "/performance", label: "Performance" },
     { path: "/rebalance", label: "Rebalance Calculator" },
   ];
 
