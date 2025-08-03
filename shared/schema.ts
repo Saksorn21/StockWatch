@@ -1,5 +1,4 @@
 import { z } from "zod";
-
 export const stockSchema = z.object({
   id: z.string(),
   symbol: z.string(),
@@ -19,7 +18,7 @@ export const portfolioStockSchema = stockSchema.extend({
 export const addStockSchema = z.object({
   symbol: z.string().min(1, "Ticker symbol is required"),
   costPrice: z.number().min(0.01, "Cost price must be greater than 0"),
-  shares: z.number().min(0.01, "Number of shares must be greater than 0"),
+  shares: z.number().min(0.0000001, "Number of shares must be greater than 0"),
   targetAllocation: z.number().min(0.1).max(100, "Target allocation must be between 0.1% and 100%"),
 });
 

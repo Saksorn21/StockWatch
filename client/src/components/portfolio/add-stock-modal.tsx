@@ -95,10 +95,10 @@ export function AddStockModal({ isOpen, onClose, onAdd }: AddStockModalProps) {
                   <FormControl>
                     <Input
                       type="number"
-                      step="0.01"
+  step= "0.01"
                       placeholder="0.00"
                       {...field}
-                      onChange={(e) => field.onChange(parseFloat(e.target.value) || 0)}
+                      onChange={(e) => field.onChange(parseFloat(e.target.value) )}
                     />
                   </FormControl>
                   <FormMessage />
@@ -115,10 +115,10 @@ export function AddStockModal({ isOpen, onClose, onAdd }: AddStockModalProps) {
                   <FormControl>
                     <Input
                       type="number"
-                      step="0.01"
-                      placeholder="0"
+                      step="0.0000001"
+                      placeholder="0.0000001"
                       {...field}
-                      onChange={(e) => field.onChange(parseFloat(e.target.value) || 0)}
+                      onChange={(e) => field.onChange(parseFloat(e.target.value )) }
                     />
                   </FormControl>
                   <FormMessage />
@@ -140,7 +140,7 @@ export function AddStockModal({ isOpen, onClose, onAdd }: AddStockModalProps) {
                       step="0.1"
                       placeholder="0"
                       {...field}
-                      onChange={(e) => field.onChange(parseFloat(e.target.value) || 0)}
+                      onChange={(e) => field.onChange(parseFloat(e.target.value) )}
                     />
                   </FormControl>
                   <FormMessage />
