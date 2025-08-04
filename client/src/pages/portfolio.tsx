@@ -144,10 +144,10 @@ export default function Portfolio() {
             <StockList stocks={stocks} onEdit={handleEditStock} onDelete={handleDeleteStock} />
           </div>
 
-          {/* All Holdings View */}
-          {subPortfolios.length > 1 && getAllPortfolioStocks().length > 0 && (
-            <AllHoldingsList allStocks={getAllPortfolioStocks()} />
-          )}
+          {/* All Holdings View  */}
+          {/* subPortfolios.length > 1 && getAllPortfolioStocks().length > 0 && (
+          
+          )**/}
         </>
       ) : subPortfolios.length > 0 ? (
         <div className="text-center py-12 bg-gray-50 rounded-lg">
@@ -155,7 +155,7 @@ export default function Portfolio() {
           <p className="text-gray-600">Choose a sub-portfolio above to view your stocks and portfolio metrics.</p>
         </div>
       ) : null}
-
+       <AllHoldingsList allStocks={getAllPortfolioStocks()} />
       {/* Add Stock Modal */}
       <AddStockModal
         isOpen={isAddModalOpen}
