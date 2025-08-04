@@ -107,8 +107,7 @@ export function PortfolioAllocationChart({ subPortfolios, getAllPortfolioStocks 
         </CardTitle>
       </CardHeader>
       <CardContent>
-        
-        <div className="relative h-64 w-full ">
+        <div className="relative h-64 w-full">
           <ResponsiveContainer width="100%" height="100%">
             <PieChart>
               <Pie
@@ -129,7 +128,7 @@ export function PortfolioAllocationChart({ subPortfolios, getAllPortfolioStocks 
           </ResponsiveContainer>
           
           {/* Center value display */}
-          <div className="absolute inset-0 flex items-center justify- pointer-events-none">
+          <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
             <div className="text-center">
               <div className="text-2xl font-bold text-gray-900">
                 ${totalValue.toLocaleString()}
